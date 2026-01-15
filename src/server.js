@@ -2,8 +2,13 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -14,6 +19,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// API-only backend - no static files served
+
 // Health check route
 app.get('/health', (req, res) => {
   res.json({ 
@@ -23,10 +30,15 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Routes will go here
-// app.use('/api/upload', uploadRoutes);
-// app.use('/api/images', imageRoutes);
-// app.use('/api/auth', authRoutes);
+// Import routes
+import uploadRoutes from './routes/upload.js';
+import imageRoutes from './routes/images.js';
+import transformRoutes from './routes/transform.js';
+
+// Routes
+app.use('/api/upload', uploadRoutes);
+app.use('/api/images', imageRoutes);
+app.use('/api/transform', transformRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
