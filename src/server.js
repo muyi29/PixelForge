@@ -23,19 +23,33 @@ app.use(express.urlencoded({ extended: true }));
 
 // Health check route
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
+  res.json({
+    status: 'ok',
     message: 'PixelForge API is running',
     timestamp: new Date().toISOString()
   });
 });
 
 // Import routes
+import authRoutes from './routes/auth.js';
+import userRoutes from './routes/user.js';
 import uploadRoutes from './routes/upload.js';
 import imageRoutes from './routes/images.js';
 import transformRoutes from './routes/transform.js';
+import rateLimit from 'express-rate-limit';
+
+// Rate limiting for auth routes (prevent brute force)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // Limit each IP to 10 requests per windowMs
+  message: {
+    error: 'Too many authentication attempts, please try again later'
+  }
+});
 
 // Routes
+app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/user', userRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/images', imageRoutes);
 app.use('/api/transform', transformRoutes);
@@ -68,7 +82,7 @@ const startServer = async () => {
   try {
     // Initialize database tables
     await initDatabase();
-    
+
     app.listen(PORT, () => {
       console.log(`🚀 PixelForge API running on port ${PORT}`);
       console.log(`📍 Health check: http://localhost:${PORT}/health`);

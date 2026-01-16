@@ -2,6 +2,8 @@ import express from 'express';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import { authenticate, optionalAuth } from '../middleware/authMiddleware.js';
+import Image from '../models/Image.js';
 
 const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
@@ -32,21 +34,36 @@ router.get('/:filename', (req, res) => {
   }
 });
 
-// DELETE /api/images/:filename - Delete image
-router.delete('/:filename', (req, res) => {
+// DELETE /api/images/:filename - Delete image (requires authentication and ownership)
+router.delete('/:filename', authenticate, async (req, res) => {
   try {
     const { filename } = req.params;
-    const imagePath = path.join(__dirname, '../../uploads', filename);
 
-    // Check if file exists
-    if (!fs.existsSync(imagePath)) {
+    // Find image in database
+    const imageRecord = await Image.findByFilename(filename);
+
+    if (!imageRecord) {
       return res.status(404).json({
         error: 'Image not found'
       });
     }
 
-    // Delete the file
-    fs.unlinkSync(imagePath);
+    // Check ownership
+    if (imageRecord.user_id !== req.user.id) {
+      return res.status(403).json({
+        error: 'You do not have permission to delete this image'
+      });
+    }
+
+    const imagePath = path.join(__dirname, '../../uploads', filename);
+
+    // Delete file from filesystem
+    if (fs.existsSync(imagePath)) {
+      fs.unlinkSync(imagePath);
+    }
+
+    // Delete from database
+    await Image.deleteByFilename(filename);
 
     res.json({
       success: true,
