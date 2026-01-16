@@ -354,7 +354,7 @@ ISC
 
 ## 👤 Author
 
-Your Name - [GitHub](https://github.com/yourusername)
+Muyiwa Obaremi - [GitHub](https://github.com/muyi29)
 
 ## 🙏 Acknowledgments
 
