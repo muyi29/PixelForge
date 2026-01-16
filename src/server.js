@@ -7,6 +7,9 @@ import { fileURLToPath } from 'url';
 
 dotenv.config();
 
+// Swagger documentation
+import { swaggerUi, swaggerSpec } from './config/swagger.js';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -19,6 +22,12 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// API Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'PixelForge API Documentation'
+}));
+
 // API-only backend - no static files served
 
 // Health check route
@@ -26,7 +35,8 @@ app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
     message: 'PixelForge API is running',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    docs: `${req.protocol}://${req.get('host')}/api-docs`
   });
 });
 
