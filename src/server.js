@@ -61,7 +61,22 @@ app.use((req, res) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 PixelForge API running on port ${PORT}`);
-  console.log(`📍 Health check: http://localhost:${PORT}/health`);
-});
+import { initDatabase } from './db/database.js';
+
+// Initialize database and start server
+const startServer = async () => {
+  try {
+    // Initialize database tables
+    await initDatabase();
+    
+    app.listen(PORT, () => {
+      console.log(`🚀 PixelForge API running on port ${PORT}`);
+      console.log(`📍 Health check: http://localhost:${PORT}/health`);
+    });
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
+  }
+};
+
+startServer();
